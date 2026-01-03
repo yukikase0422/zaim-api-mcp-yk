@@ -57,6 +57,47 @@ ZAIM_ACCESS_TOKEN=your_access_token
 ZAIM_ACCESS_TOKEN_SECRET=your_access_token_secret
 ```
 
+## OAuth認証セットアップ
+
+Zaim APIを使用するには、Consumer KeyとConsumer Secretに加えて、Access TokenとAccess Token Secretが必要です。
+
+### 1. Consumer KeyとConsumer Secretの取得
+
+1. [Zaim Developers](https://dev.zaim.net/)にアクセス
+2. アプリケーションを登録してConsumer KeyとConsumer Secretを取得
+
+### 2. Access TokenとAccess Token Secretの取得
+
+OAuth認証スクリプトを使用して、Access TokenとAccess Token Secretを取得します。
+
+```bash
+# 依存関係をインストール
+npm install
+
+# OAuth認証スクリプトを実行
+npm run oauth-setup
+```
+
+スクリプト実行後、以下の手順で認証を行います：
+
+1. スクリプトがリクエストトークンを取得します
+2. 認証URLが表示されるので、ブラウザで開きます
+3. Zaimにログインし、アプリケーションを認証します
+4. 表示されたVerifier（PINコード）をコピーします
+5. スクリプトにVerifierを入力します
+6. Access TokenとAccess Token Secretが表示されます
+
+取得した認証情報を`.env`ファイルに保存します：
+
+```bash
+ZAIM_CONSUMER_KEY=<取得したConsumer Key>
+ZAIM_CONSUMER_SECRET=<取得したConsumer Secret>
+ZAIM_ACCESS_TOKEN=<取得したAccess Token>
+ZAIM_ACCESS_TOKEN_SECRET=<取得したAccess Token Secret>
+```
+
+**注意**: `.env`ファイルは`.gitignore`に含まれており、Gitにコミットされません。
+
 ## インストール
 
 ### Dockerを使用（推奨）
