@@ -29,7 +29,7 @@ import {
 } from './money/money-delete-tools.js';
 
 // マスターデータ取得ツール
-import { 
+import {
   getUserCategoriesToolDefinition,
   getUserGenresToolDefinition,
   getUserAccountsToolDefinition,
@@ -37,6 +37,19 @@ import {
   getDefaultGenresByModeToolDefinition,
   getCurrenciesToolDefinition
 } from './master/master-data-tools.js';
+
+// 高度検索・一括操作ツール
+import {
+  advancedSearchToolDefinition
+} from './advanced/advanced-search-tool.js';
+
+import {
+  bulkUpdateToolDefinition
+} from './advanced/bulk-update-tool.js';
+
+import {
+  bulkDeleteToolDefinition
+} from './advanced/bulk-delete-tool.js';
 
 export const registeredTools: ToolDefinition[] = [
   // 認証・ユーザー情報
@@ -63,7 +76,12 @@ export const registeredTools: ToolDefinition[] = [
   getUserAccountsToolDefinition,
   getDefaultCategoriesByModeToolDefinition,
   getDefaultGenresByModeToolDefinition,
-  getCurrenciesToolDefinition
+  getCurrenciesToolDefinition,
+
+  // 高度検索・一括操作
+  advancedSearchToolDefinition,
+  bulkUpdateToolDefinition,
+  bulkDeleteToolDefinition
 ];
 
 export function getToolByName(name: string): ToolDefinition | undefined {

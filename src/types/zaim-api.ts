@@ -44,6 +44,10 @@ export const ZaimMoneySchema = z.object({
   amount: z.number(),
   /** コメント */
   comment: z.string(),
+  /** 店舗名（オプション） */
+  place: z.string().optional(),
+  /** 品目名（オプション） */
+  name: z.string().optional(),
   /** 確定フラグ */
   active: z.number(),
   /** 作成日時 */

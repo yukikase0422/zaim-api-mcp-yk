@@ -69,6 +69,27 @@ import {
   type GetCurrenciesInput
 } from '../tools/master/master-data-tools.js';
 
+// 高度検索ツール
+import {
+  advancedSearchTool,
+  AdvancedSearchToolInputSchema,
+  type AdvancedSearchToolInput
+} from '../tools/advanced/advanced-search-tool.js';
+
+// 一括更新ツール
+import {
+  bulkUpdateTool,
+  BulkUpdateToolInputSchema,
+  type BulkUpdateToolInput
+} from '../tools/advanced/bulk-update-tool.js';
+
+// 一括削除ツール
+import {
+  bulkDeleteTool,
+  BulkDeleteToolInputSchema,
+  type BulkDeleteToolInput
+} from '../tools/advanced/bulk-delete-tool.js';
+
 export class ToolHandler {
   private validateAndParseInput<T>(
     args: unknown,
@@ -185,6 +206,27 @@ export class ToolHandler {
       case 'zaim_get_currencies': {
         const input = this.validateAndParseInput<GetCurrenciesInput>(args, GetCurrenciesInputSchema, name);
         const result = await getCurrenciesTool(input);
+        return this.formatResponse(result);
+      }
+
+      // 高度検索ツール
+      case 'zaim_advanced_search': {
+        const input = AdvancedSearchToolInputSchema.parse(args || {}) as AdvancedSearchToolInput;
+        const result = await advancedSearchTool(input);
+        return this.formatResponse(result);
+      }
+
+      // 一括更新ツール
+      case 'zaim_bulk_update': {
+        const input = BulkUpdateToolInputSchema.parse(args || {}) as BulkUpdateToolInput;
+        const result = await bulkUpdateTool(input);
+        return this.formatResponse(result);
+      }
+
+      // 一括削除ツール
+      case 'zaim_bulk_delete': {
+        const input = BulkDeleteToolInputSchema.parse(args || {}) as BulkDeleteToolInput;
+        const result = await bulkDeleteTool(input);
         return this.formatResponse(result);
       }
 
