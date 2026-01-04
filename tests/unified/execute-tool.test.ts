@@ -184,12 +184,12 @@ describe('zaim_execute Tool', () => {
       expect(executeToolDefinition.inputSchema.properties).toHaveProperty('params');
     });
 
-    it('operationが必須パラメータである', () => {
-      expect(executeToolDefinition.inputSchema.required).toContain('operation');
+    it('operationまたはbatchのどちらかが必要（requiredはなし）', () => {
+      expect(executeToolDefinition.inputSchema.required).toBeUndefined();
     });
 
-    it('paramsが必須パラメータではない', () => {
-      expect(executeToolDefinition.inputSchema.required).not.toContain('params');
+    it('paramsはオプショナルパラメータである', () => {
+      expect(executeToolDefinition.inputSchema.required).toBeUndefined();
     });
   });
 
@@ -385,5 +385,172 @@ describe('zaim_execute Tool', () => {
         expect(result.operation).toBe(testCase.operation);
       });
     }
+  });
+});
+
+describe('zaim_execute Tool - バッチ処理', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('ExecuteToolInputSchema - バッチ入力', () => {
+    it('batchのみの入力を受け付ける', () => {
+      const result = ExecuteToolInputSchema.safeParse({
+        batch: [
+          { operation: 'check_auth' },
+          { operation: 'get_user' }
+        ]
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.batch).toHaveLength(2);
+        expect(result.data.operation).toBeUndefined();
+      }
+    });
+
+    it('batchの各要素にparamsを含められる', () => {
+      const result = ExecuteToolInputSchema.safeParse({
+        batch: [
+          { operation: 'get_money', params: { limit: 10 } },
+          { operation: 'get_default_genres', params: { mode: 'payment' } }
+        ]
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.batch![0].params).toEqual({ limit: 10 });
+        expect(result.data.batch![1].params).toEqual({ mode: 'payment' });
+      }
+    });
+
+    it('operationとbatchの同時指定を拒否する', () => {
+      const result = ExecuteToolInputSchema.safeParse({
+        operation: 'check_auth',
+        batch: [{ operation: 'get_user' }]
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('空のbatch配列を拒否する', () => {
+      const result = ExecuteToolInputSchema.safeParse({
+        batch: []
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('operationもbatchも未指定を拒否する', () => {
+      const result = ExecuteToolInputSchema.safeParse({
+        params: { test: 'value' }
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('executeTool - バッチ実行', () => {
+    it('複数の操作を順次実行し結果を集約する', async () => {
+      const result = await executeTool({
+        batch: [
+          { operation: 'check_auth' },
+          { operation: 'get_user' },
+          { operation: 'get_categories' }
+        ]
+      });
+
+      // バッチ結果の形式を確認
+      expect('results' in result).toBe(true);
+      expect('summary' in result).toBe(true);
+      
+      const batchResult = result as any;
+      expect(batchResult.results).toHaveLength(3);
+      expect(batchResult.summary.total).toBe(3);
+      expect(batchResult.summary.success).toBe(3);
+      expect(batchResult.summary.failed).toBe(0);
+      expect(batchResult.success).toBe(true);
+    });
+
+    it('一部の操作が失敗した場合のサマリーが正しい', async () => {
+      const result = await executeTool({
+        batch: [
+          { operation: 'check_auth' },
+          { operation: 'invalid_operation' },
+          { operation: 'get_user' }
+        ]
+      });
+
+      const batchResult = result as any;
+      expect(batchResult.results).toHaveLength(3);
+      expect(batchResult.summary.total).toBe(3);
+      expect(batchResult.summary.success).toBe(2);
+      expect(batchResult.summary.failed).toBe(1);
+      expect(batchResult.success).toBe(false);
+      expect(batchResult.message).toContain('2件成功');
+      expect(batchResult.message).toContain('1件失敗');
+    });
+
+    it('各結果にindexが正しく含まれる', async () => {
+      const result = await executeTool({
+        batch: [
+          { operation: 'check_auth' },
+          { operation: 'get_user' }
+        ]
+      });
+
+      const batchResult = result as any;
+      expect(batchResult.results[0].index).toBe(0);
+      expect(batchResult.results[1].index).toBe(1);
+    });
+
+    it('各結果にoperation名が正しく含まれる', async () => {
+      const result = await executeTool({
+        batch: [
+          { operation: 'check_auth' },
+          { operation: 'get_money' }
+        ]
+      });
+
+      const batchResult = result as any;
+      expect(batchResult.results[0].operation).toBe('check_auth');
+      expect(batchResult.results[1].operation).toBe('get_money');
+    });
+
+    it('パラメータ付きの操作がバッチで正しく実行される', async () => {
+      const result = await executeTool({
+        batch: [
+          { operation: 'get_default_genres', params: { mode: 'payment' } },
+          { operation: 'get_default_categories', params: { mode: 'income' } }
+        ]
+      });
+
+      const batchResult = result as any;
+      expect(batchResult.success).toBe(true);
+      expect(batchResult.results).toHaveLength(2);
+      expect(batchResult.results[0].success).toBe(true);
+      expect(batchResult.results[1].success).toBe(true);
+    });
+
+    it('全操作が成功した場合のメッセージが正しい', async () => {
+      const result = await executeTool({
+        batch: [
+          { operation: 'check_auth' }
+        ]
+      });
+
+      const batchResult = result as any;
+      expect(batchResult.message).toContain('すべて成功');
+    });
+  });
+
+  describe('executeToolDefinition - バッチ対応', () => {
+    it('入力スキーマにbatchパラメータが含まれる', () => {
+      expect(executeToolDefinition.inputSchema.properties).toHaveProperty('batch');
+    });
+
+    it('batchパラメータの説明が正しい', () => {
+      const batchProp = (executeToolDefinition.inputSchema.properties as any).batch;
+      expect(batchProp.description).toContain('複数の操作');
+    });
+
+    it('descriptionにbatch機能の説明が含まれる', () => {
+      expect(executeToolDefinition.description).toContain('batch');
+    });
   });
 });
