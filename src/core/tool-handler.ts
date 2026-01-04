@@ -90,6 +90,13 @@ import {
   type BulkDeleteToolInput
 } from '../tools/advanced/bulk-delete-tool.js';
 
+// ヘルプツール
+import {
+  getToolHelpTool,
+  GetToolHelpInputSchema,
+  type GetToolHelpInput
+} from '../tools/help/tool-help.js';
+
 export class ToolHandler {
   private validateAndParseInput<T>(
     args: unknown,
@@ -227,6 +234,13 @@ export class ToolHandler {
       case 'zaim_bulk_delete': {
         const input = BulkDeleteToolInputSchema.parse(args || {}) as BulkDeleteToolInput;
         const result = await bulkDeleteTool(input);
+        return this.formatResponse(result);
+      }
+
+      // ヘルプツール
+      case 'zaim_get_tool_help': {
+        const input = this.validateAndParseInput<GetToolHelpInput>(args, GetToolHelpInputSchema, name);
+        const result = await getToolHelpTool(input);
         return this.formatResponse(result);
       }
 

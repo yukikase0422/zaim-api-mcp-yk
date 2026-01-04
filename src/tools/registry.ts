@@ -51,6 +51,11 @@ import {
   bulkDeleteToolDefinition
 } from './advanced/bulk-delete-tool.js';
 
+// ヘルプツール
+import {
+  getToolHelpToolDefinition
+} from './help/tool-help.js';
+
 export const registeredTools: ToolDefinition[] = [
   // 認証・ユーザー情報
   checkAuthStatusToolDefinition,
@@ -81,7 +86,10 @@ export const registeredTools: ToolDefinition[] = [
   // 高度検索・一括操作
   advancedSearchToolDefinition,
   bulkUpdateToolDefinition,
-  bulkDeleteToolDefinition
+  bulkDeleteToolDefinition,
+
+  // ヘルプ
+  getToolHelpToolDefinition
 ];
 
 export function getToolByName(name: string): ToolDefinition | undefined {
