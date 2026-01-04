@@ -56,6 +56,15 @@ import {
   getToolHelpToolDefinition
 } from './help/tool-help.js';
 
+import {
+  helpToolDefinition
+} from './help/help-tool.js';
+
+// 統合ツール
+import {
+  executeToolDefinition
+} from './unified/execute-tool.js';
+
 export const registeredTools: ToolDefinition[] = [
   // 認証・ユーザー情報
   checkAuthStatusToolDefinition,
@@ -89,7 +98,11 @@ export const registeredTools: ToolDefinition[] = [
   bulkDeleteToolDefinition,
 
   // ヘルプ
-  getToolHelpToolDefinition
+  getToolHelpToolDefinition,
+  helpToolDefinition,
+
+  // 統合ツール
+  executeToolDefinition
 ];
 
 export function getToolByName(name: string): ToolDefinition | undefined {

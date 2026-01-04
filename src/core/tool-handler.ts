@@ -97,6 +97,19 @@ import {
   type GetToolHelpInput
 } from '../tools/help/tool-help.js';
 
+import {
+  helpTool,
+  HelpToolInputSchema,
+  type HelpToolInput
+} from '../tools/help/help-tool.js';
+
+// 統合ツール
+import {
+  executeTool,
+  ExecuteToolInputSchema,
+  type ExecuteToolInput
+} from '../tools/unified/execute-tool.js';
+
 export class ToolHandler {
   private validateAndParseInput<T>(
     args: unknown,
@@ -241,6 +254,20 @@ export class ToolHandler {
       case 'zaim_get_tool_help': {
         const input = this.validateAndParseInput<GetToolHelpInput>(args, GetToolHelpInputSchema, name);
         const result = await getToolHelpTool(input);
+        return this.formatResponse(result);
+      }
+
+
+      case 'zaim_help': {
+        const input = this.validateAndParseInput<HelpToolInput>(args, HelpToolInputSchema, name);
+        const result = await helpTool(input);
+        return this.formatResponse(result);
+      }
+
+      // 統合ツール
+      case 'zaim_execute': {
+        const input = this.validateAndParseInput<ExecuteToolInput>(args, ExecuteToolInputSchema, name);
+        const result = await executeTool(input);
         return this.formatResponse(result);
       }
 
